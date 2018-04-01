@@ -1,7 +1,14 @@
 import React, { Component } from 'react';
+import { Text, View } from 'react-native';
 import { connect } from 'react-redux';
-import { emailChanged, passwordChanged } from '../actions';
-import { Card, CardSection, Input, Button } from './common';
+import {
+  emailChanged,
+  passwordChanged,
+  loginUser,
+  loginUserPass,
+  loginUserFail
+} from '../actions';
+import { Card, CardSection, Input, Button, Spinner } from './common';
 
 class LoginForm extends Component {
   onEmailChange(text) {
@@ -10,6 +17,28 @@ class LoginForm extends Component {
 
   onPasswordChange(text) {
     this.props.passwordChanged(text);
+  }
+
+  onButtonPress() {
+    const { email, password } = this.props;
+    this.props.loginUser({ email, password });
+  }
+
+  renderError() {
+    if (this.props.error) {
+      return (
+        <View style={{ backgroundColor: 'white' }}>
+          <Text style={styles.errorTextStyle}>{this.props.error}</Text>;
+        </View>
+      );
+    }
+  }
+
+  renderButton() {
+    if (this.props.loading) {
+      return <Spinner />;
+    }
+    return <Button onPress={this.onButtonPress.bind(this)}>Login</Button>;
   }
 
   render() {
@@ -34,22 +63,31 @@ class LoginForm extends Component {
           />
         </CardSection>
 
-        <CardSection>
-          <Button>Login</Button>
-        </CardSection>
+        <CardSection>{this.renderError.bind(this)}</CardSection>
+
+        <CardSection>{this.renderButton()}</CardSection>
       </Card>
     );
   }
 }
 
-const mapStateToProps = state => {
-  const { email, password } = state.auth;
-  return {
-    email,
-    password
-  };
+const styles = {
+  errorTextStyle: {
+    fontSize: 20,
+    alignSelf: 'center',
+    color: 'red'
+  }
 };
 
-export default connect(mapStateToProps, { emailChanged, passwordChanged })(
-  LoginForm
-);
+const mapStateToProps = ({ auth }) => {
+  const { email, password, error, loading } = auth;
+  return { email, password, error, loading };
+};
+
+export default connect(mapStateToProps, {
+  emailChanged,
+  passwordChanged,
+  loginUser,
+  loginUserFail,
+  loginUserPass
+})(LoginForm);
